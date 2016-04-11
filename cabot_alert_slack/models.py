@@ -33,7 +33,7 @@ class SlackAlert(AlertPlugin):
                 u.slack_alias = env.get('SLACK_ALERT_CHANNEL')
 
             for slack in u.slack_alias.split(','):
-                if(u.slack_alias not in slack_aliases):
+                if(slack not in slack_aliases):
                     slack_aliases.append('#' + slack)
 
         if service.overall_status == service.WARNING_STATUS:
