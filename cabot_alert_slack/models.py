@@ -10,6 +10,9 @@ from django.template import Context, Template
 import requests
 import json
 
+import logging
+
+logger = logging.getLogger(__name__)
 slack_template = "Service {{ service.name }} {% if service.overall_status == service.PASSING_STATUS %}is back to normal{% else %}reporting {{ service.overall_status }} status{% endif %}: {{ scheme }}://{{ host }}{% url 'service' pk=service.id %}. {% if service.overall_status != service.PASSING_STATUS %}Checks failing: {% for check in service.all_failing_checks %}{% if check.check_category == 'Jenkins check' %}{% if check.last_result.error %} {{ check.name }} ({{ check.last_result.error|safe }}) {{jenkins_api}}job/{{ check.name }}/{{ check.last_result.job_number }}/console{% else %} {{ check.name }} {{jenkins_api}}/job/{{ check.name }}/{{check.last_result.job_number}}/console {% endif %}{% else %} {{ check.name }} {% if check.last_result.error %} ({{ check.last_result.error|safe }}){% endif %}{% endif %}{% endfor %}{% endif %}{% if alert %}{% for alias in users %} @{{ alias }}{% endfor %}{% endif %}"
 
 # This provides the slack alias for each user. Each object corresponds to a User
@@ -23,6 +26,14 @@ class SlackAlert(AlertPlugin):
         users = list(users) + list(duty_officers)
 
         slack_aliases = [u.slack_alias for u in SlackAlertUserData.objects.filter(user__user__in=users)]
+        for u in SlackAlertUserData.objects.filter(user__user__in=users):
+            u.slack_alias = str(u.slack_alias)
+
+            if(len(u.slack_alias) == 0):
+                u.slack_alias = env.get('SLACK_ALERT_CHANNEL')
+
+            if(u.slack_alias not in slack_aliases):
+                slack_aliases.append('#' + u.slack_alias)
 
         if service.overall_status == service.WARNING_STATUS:
             alert = False  # Don't alert at all for WARNING
@@ -38,18 +49,17 @@ class SlackAlert(AlertPlugin):
 
         c = Context({
             'service': service,
-            'users': slack_aliases,
             'host': settings.WWW_HTTP_HOST,
             'scheme': settings.WWW_SCHEME,
             'alert': alert,
             'jenkins_api': settings.JENKINS_API,
         })
         message = Template(slack_template).render(c)
-        self._send_slack_alert(message, service, color=color, sender='Cabot')
 
-    def _send_slack_alert(self, message, service, color='green', sender='Cabot'):
+        for channel in slack_aliases:
+            self._send_slack_alert(message, service, channel, color=color, sender='Cabot')
 
-        channel = '#' + env.get('SLACK_ALERT_CHANNEL')
+    def _send_slack_alert(self, message, service, channel, color='green', sender='Cabot'):
         url = env.get('SLACK_WEBHOOK_URL')
         icon_url = env.get('SLACK_ICON_URL')
 
@@ -74,6 +84,8 @@ class SlackAlert(AlertPlugin):
                 ]
             }]
         }))
+
+        logging.info('Slack alert was sent to channel: ' + channel)
 
 class SlackAlertUserData(AlertPluginUserData):
     name = "Slack Plugin"
