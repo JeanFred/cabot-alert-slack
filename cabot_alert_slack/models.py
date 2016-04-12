@@ -10,6 +10,7 @@ from django.template import Context, Template
 import requests
 import json
 
+from sets import Set
 import logging
 
 logger = logging.getLogger(__name__)
@@ -22,10 +23,9 @@ class SlackAlert(AlertPlugin):
 
     def send_alert(self, service, users, duty_officers):
         alert = True
-        slack_aliases = []
+        slack_aliases = Set()
         users = list(users) + list(duty_officers)
 
-        slack_aliases = [u.slack_alias for u in SlackAlertUserData.objects.filter(user__user__in=users)]
         for u in SlackAlertUserData.objects.filter(user__user__in=users):
             u.slack_alias = str(u.slack_alias)
 
@@ -33,8 +33,7 @@ class SlackAlert(AlertPlugin):
                 u.slack_alias = env.get('SLACK_ALERT_CHANNEL')
 
             for slack in u.slack_alias.split(','):
-                if(slack not in slack_aliases):
-                    slack_aliases.append('#' + slack)
+                slack_aliases.add('#' + slack)
 
         if service.overall_status == service.WARNING_STATUS:
             alert = False  # Don't alert at all for WARNING
