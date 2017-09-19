@@ -92,11 +92,11 @@ class SlackAlert(AlertPlugin):
                 'fields': [{
                     'title': 'status',
                     'value': service.overall_status,
-                    'short': 'false'
+                    'short': False
                     }, {
                     'title': 'old status',
                     'value': service.old_overall_status,
-                    'short': 'false'
+                    'short': False
                     }
                 ],
                 'callback_id': "acknowledge_{}".format(service.id),
