@@ -1,3 +1,7 @@
+Version 0.8.4
+-------------
+* Added SLACK_SENDER env variable to allow Slack to show chosen name. (SL)
+
 Version 0.8.3
 -------------
 

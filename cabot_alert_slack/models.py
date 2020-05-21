@@ -61,14 +61,16 @@ class SlackAlert(AlertPlugin):
             'alert': alert,
         })
         message = Template(slack_template).render(c)
-        self._send_slack_alert(message, service, color=color, sender='Cabot')
+        self._send_slack_alert(message, service, color=color)
 
-    def _send_slack_alert(self, message, service, color='good', sender='Cabot'):
+    def _send_slack_alert(self, message, service, color='good'):
 
         channel = '#' + env.get('SLACK_ALERT_CHANNEL')
         url = env.get('SLACK_WEBHOOK_URL')
         icon_url = env.get('SLACK_ICON_URL')
-
+        sender = env.get('SLACK_SENDER')
+        if sender is None:
+            sender = 'Cabot'
         actions = []
         if env.get('SLACK_INTERACTIVE_MESSAGES', False) and service.overall_status != service.PASSING_STATUS:
             actions.append({
