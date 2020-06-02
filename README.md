@@ -28,6 +28,7 @@ CABOT_PLUGINS_ENABLED=cabot_alert_slack==0.6
 SLACK_ALERT_CHANNEL=channel_name_without_hash
 SLACK_WEBHOOK_URL=url_of_your_webhook_integration_from_slack
 SLACK_ICON_URL=http://lorempixel.com/40/40/
+SLACK_SENDER=chosen_name (max 15 chars)
 ```
 
 Add cabot_alert_slack to the installed apps in settings.py
