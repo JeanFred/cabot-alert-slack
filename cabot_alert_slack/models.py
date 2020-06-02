@@ -68,9 +68,7 @@ class SlackAlert(AlertPlugin):
         channel = '#' + env.get('SLACK_ALERT_CHANNEL')
         url = env.get('SLACK_WEBHOOK_URL')
         icon_url = env.get('SLACK_ICON_URL')
-        sender = env.get('SLACK_SENDER')
-        if sender is None:
-            sender = 'Cabot'
+        sender = env.get('SLACK_SENDER', 'Cabot')
         actions = []
         if env.get('SLACK_INTERACTIVE_MESSAGES', False) and service.overall_status != service.PASSING_STATUS:
             actions.append({
